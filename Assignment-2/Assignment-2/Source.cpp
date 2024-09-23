@@ -9,10 +9,11 @@ struct STUDENT_DATA
 {
     std::string firstName;      //first name of the student
     std::string lastName;       //last name of the student
+    std::string email;          //email address of the student (only for pre-release)
 };
 
 //function to read student data from the file and return a vector of STUDENT_DATA
-std::vector<STUDENT_DATA> readStudentData(const std::string& filename)
+std::vector<STUDENT_DATA> readStudentData(const std::string& filename, bool isPreRelease = false)
 {
     std::ifstream file(filename);       //open the file with the given filename
     std::vector<STUDENT_DATA> students;         //vector to store student data
@@ -29,12 +30,19 @@ std::vector<STUDENT_DATA> readStudentData(const std::string& filename)
     while (std::getline(file, line))
     {
         std::stringstream ss(line);         //create a string stream to parse the line
-        std::string firstName, lastName;        //variables to hold first name and last name
+        std::string firstName, lastName, email;
 
-        //split the line by the comma (the file contains "firstName, lastName")
+        //split the line by the comma (the file contains "firstName, lastName" for standard and "firstName, lastName, email" for pre-release)
         if (std::getline(ss, firstName, ',') && std::getline(ss, lastName, ','))
         {
-            students.push_back({ firstName, lastName });    //add the parsed student data to the vector
+            if (isPreRelease && std::getline(ss, email, ','))
+            {
+                students.push_back({ firstName, lastName, email });    //add student with email for pre-release
+            }
+            else
+            {
+                students.push_back({ firstName, lastName, "" });    //add student without email for standard version
+            }
         }
     }
 
@@ -45,23 +53,34 @@ std::vector<STUDENT_DATA> readStudentData(const std::string& filename)
 
 int main()
 {
-    std::string filename = "StudentData.txt";          //the name of the file containing student data
+    std::string studentDataFile = "StudentData.txt";            //the file for standard version
+    std::string emailDataFile = "StudentData_Emails.txt";       //the file for pre-release email data
 
-    //read student data from the file and store it in a vector
-    std::vector<STUDENT_DATA> students = readStudentData(filename);
+    //print whether the app is running in standard or pre-release mode
+    #ifdef PRE_RELEASE
+        std::cout << "Running in Pre-Release mode" << std::endl;
+        std::vector<STUDENT_DATA> students = readStudentData(emailDataFile, true);
+    #else
+        std::cout << "Running in Standard mode" << std::endl;
+        std::vector<STUDENT_DATA> students = readStudentData(studentDataFile, false);
+    #endif
 
-    //check if any students were loaded and print the number of students
+    //display loaded students (debug mode only)
     if (!students.empty())
     {
         std::cout << "Total students loaded: " << students.size() << std::endl;
-        
-        //only in debug mode, print out all student information
+
         #ifdef _DEBUG
-            std::cout << "\nPrinting the student data (using DEBUG mode):" << std::endl;
+            std::cout << "\nPrinting the student data (using DEBUG mode):\n" << std::endl;
             for (const auto& student : students)
             {
-                std::cout << "First Name: " << student.firstName << ", Last Name: " << student.lastName << std::endl;
-                std::cout << "-----------------------------------" << std::endl;           //just a separation line between students
+                std::cout << "First Name: " << student.firstName << ", Last Name: " << student.lastName;
+                if (!student.email.empty())
+                {
+                    std::cout << ", Email: " << student.email;
+                }
+                std::cout << std::endl;
+                std::cout << "-----------------------------------" << std::endl;
             }
         #endif
     }
@@ -70,5 +89,5 @@ int main()
         std::cout << "No students were loaded." << std::endl;       //print a message if no students were loaded
     }
 
-    return 1;           //end of program, returning 1 as required by the instructions
+    return 1;
 }
