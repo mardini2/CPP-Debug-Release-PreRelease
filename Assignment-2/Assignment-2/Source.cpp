@@ -54,6 +54,16 @@ int main()
     if (!students.empty())
     {
         std::cout << "Total students loaded: " << students.size() << std::endl;
+        
+        //only in debug mode, print out all student information
+        #ifdef _DEBUG
+            std::cout << "\nPrinting the student data (using DEBUG mode):" << std::endl;
+            for (const auto& student : students)
+            {
+                std::cout << "First Name: " << student.firstName << ", Last Name: " << student.lastName << std::endl;
+                std::cout << "-----------------------------------" << std::endl;           //just a separation line between students
+            }
+        #endif
     }
     else
     {
